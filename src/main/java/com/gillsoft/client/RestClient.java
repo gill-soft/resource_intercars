@@ -1,5 +1,6 @@
 package com.gillsoft.client;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -7,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.util.datetime.FastDateFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,20 +27,23 @@ import com.gillsoft.model.ArrayOfString;
 import com.gillsoft.model.CancelTicket;
 import com.gillsoft.model.PathL;
 import com.gillsoft.model.WebServiceExternal;
+import com.gillsoft.util.StringUtil;
 
 @Component
 @Scope(value = ConfigurableBeanFactory.SCOPE_SINGLETON)
 public class RestClient {
+
+	private static Logger LOGGER = LogManager.getLogger(RestClient.class);
 
 	public static final String STATIONS_CACHE_KEY = "intercars.stations.";
 	public static final String TRIPS_CACHE_KEY = "intercars.trips.";
 
 	public static final String DATE_FORMAT = "dd.MM.yyyy";
 	public static final String DATE_FORMAT_FULL = "dd.MM.yyyy HH:mm";
-	public final static FastDateFormat dateFormat = FastDateFormat.getInstance(DATE_FORMAT);
-	public final static FastDateFormat dateFormatFull = FastDateFormat.getInstance(DATE_FORMAT_FULL);
+	public static final FastDateFormat dateFormat = FastDateFormat.getInstance(DATE_FORMAT);
+	public static final FastDateFormat dateFormatFull = FastDateFormat.getInstance(DATE_FORMAT_FULL);
 
-	private final static String emptyString = "";
+	private static final String emptyString = "";
 
 	@Autowired
 	@Qualifier("RedisMemoryCache")
@@ -63,7 +69,7 @@ public class RestClient {
 		try {
 			return RestClient.webService.getWebServiceExternalSoap().getCity();
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.error(e);
 			throw new ResponseError(e.getMessage(), e);
 		}
 	}
@@ -77,7 +83,6 @@ public class RestClient {
 		try {
 			return (TripPackage) cache.read(params);
 		} catch (IOCacheException e) {
-			e.printStackTrace();
 			// ставим пометку, что кэш еще формируется
 			TripPackage tripPackage = new TripPackage();
 			tripPackage.setContinueSearch(true);
@@ -95,7 +100,7 @@ public class RestClient {
 					.getStopPath(key.getCityStartInt(), key.getCityEndInt(), dateFormat.format(key.getDate()));
 			return new TripPackage(pathList, stopPath);
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.error(e);
 			throw new ResponseError(e.getMessage(), e);
 		}
 	}
@@ -160,22 +165,53 @@ public class RestClient {
 	}
 
 	public void cancelationTicket(OrderIdModel orderIdModel) {
-		for (String key : orderIdModel.getServices().keySet()) {
-			for (OrderIdModelObject orderIdModelObject : orderIdModel.getServices().get(key)) {
+		orderIdModel.getServices().entrySet().stream().forEach(entry ->
+			entry.getValue().stream().forEach(value -> {
 				try {
 					CancelTicket cancelTicket = RestClient.webService.getWebServiceExternalSoap()
-							.cancelationTicket(Config.getLogin(), Config.getPassword(), orderIdModelObject.getTicketNumber());
+							.cancelationTicket(Config.getLogin(), Config.getPassword(), value.getTicketNumber());
 					if (!cancelTicket.isSuccess()) {
 						throw new Exception(cancelTicket.getError());
 					}
-					orderIdModelObject.setCancellationTicketResult(true);
-					orderIdModelObject.setReturnPrice(cancelTicket.getReturnPrice());
+					value.setCancellationTicketResult(true);
+					value.setReturnPrice(cancelTicket.getReturnPrice());
 				} catch (Exception e) {
-					e.printStackTrace();
-					orderIdModelObject.setCancellationTicketResult(false);
-					orderIdModelObject.setCancellationTicketError(e.getMessage());
+					LOGGER.error(e);
+					value.setCancellationTicketResult(false);
+					value.setCancellationTicketError(e.getMessage());
 				}
-			}
+			})
+		);
+	}
+
+	public BigDecimal returnTicket(String ticketNumber) throws Exception {
+		try {
+			return getReturnAmount(RestClient.webService.getWebServiceExternalSoap().analuteTicket(Config.getLogin(),
+					Config.getPassword(), ticketNumber));
+		} catch (Exception e) {
+			LOGGER.error(e);
+			throw e;
+		}
+	}
+
+	public String getTicketPdf(String ticketNumber) throws Exception {
+		try {
+			return StringUtil.toBase64(RestClient.webService.getWebServiceExternalSoap().printPdf(Config.getLogin(),
+					Config.getPassword(), ticketNumber));
+		} catch (Exception e) {
+			LOGGER.error(e);
+			throw e;
+		}
+	}
+
+	public static BigDecimal getReturnAmount(String anulateTicketResponse) throws Exception {
+		if (anulateTicketResponse == null || anulateTicketResponse == "false") {
+			throw new Exception();
+		}
+		try {
+			return new BigDecimal(anulateTicketResponse.replace("возврат клиенту:", "").replace(" ", ""));
+		} catch (Exception e) {
+			throw new Exception();
 		}
 	}
 

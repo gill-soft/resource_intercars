@@ -5,6 +5,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.gillsoft.cache.IOCacheException;
 import com.gillsoft.cache.RedisMemoryCache;
 import com.gillsoft.model.PathL;
@@ -13,6 +16,8 @@ import com.gillsoft.util.ContextProvider;
 public class GetTripsTask implements Runnable, Serializable {
 	
 	private static final long serialVersionUID = -612450869121241871L;
+	
+	private static Logger LOGGER = LogManager.getLogger(GetTripsTask.class);
 	
 	private TripsTaskKey key;
 	
@@ -48,6 +53,8 @@ public class GetTripsTask implements Runnable, Serializable {
 			client.getCache().write(tripPackage, params);
 		} catch (IOCacheException e) {
 			e.printStackTrace();
+			/*LOGGER.info("params" + params.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining(", ", "{", "}")));
+			LOGGER.error(e);*/
 		}
 	}
 	
@@ -66,7 +73,7 @@ public class GetTripsTask implements Runnable, Serializable {
 						max = date.getTime();
 					}
 				} catch (Exception e) {
-					e.printStackTrace();
+					LOGGER.error(e);
 				}
 			}
 			return max - System.currentTimeMillis();

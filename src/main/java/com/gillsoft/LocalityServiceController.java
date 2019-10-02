@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -66,11 +67,12 @@ public class LocalityServiceController extends AbstractLocalityService {
 							if (cities != null) {
 								all = new ArrayList<>();
 								binding = new HashMap<>();
-								for (CityS city : cities.getCityS()) {
+								all.addAll(cities.getCityS().stream().map(this::getLocalityFromStation).collect(Collectors.toList()));
+								/*for (CityS city : cities.getCityS()) {
 									Locality locality = getLocalityFromStation(city);
 									all.add(locality);
 									//binding.put(locality.getId(), station.getPairs());
-								}
+								}*/
 								cacheError = false;
 							}
 						} catch (IOCacheException e) {

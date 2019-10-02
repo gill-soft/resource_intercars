@@ -274,6 +274,37 @@ public interface WebServiceExternalSoap {
 
     /**
      * 
+     * @param pass
+     * @param numberTicket
+     * @param login
+     * @return
+     *     returns org.tempuri.TicketCommonModel
+     */
+    @WebMethod(operationName = "GetTicket", action = "http://tempuri.org/GetTicket")
+    @WebResult(name = "GetTicketResult", targetNamespace = "http://tempuri.org/")
+    @RequestWrapper(localName = "GetTicket", targetNamespace = "http://tempuri.org/", className = "org.tempuri.GetTicket")
+    @ResponseWrapper(localName = "GetTicketResponse", targetNamespace = "http://tempuri.org/", className = "org.tempuri.GetTicketResponse")
+    public TicketCommonModel getTicket(
+        @WebParam(name = "login", targetNamespace = "http://tempuri.org/")
+        String login,
+        @WebParam(name = "pass", targetNamespace = "http://tempuri.org/")
+        String pass,
+        @WebParam(name = "numberTicket", targetNamespace = "http://tempuri.org/")
+        String numberTicket);
+
+    /**
+     * 
+     * @return
+     *     returns org.tempuri.RouteCommonModel
+     */
+    @WebMethod(operationName = "GetRoutes", action = "http://tempuri.org/GetRoutes")
+    @WebResult(name = "GetRoutesResult", targetNamespace = "http://tempuri.org/")
+    @RequestWrapper(localName = "GetRoutes", targetNamespace = "http://tempuri.org/", className = "org.tempuri.GetRoutes")
+    @ResponseWrapper(localName = "GetRoutesResponse", targetNamespace = "http://tempuri.org/", className = "org.tempuri.GetRoutesResponse")
+    public RouteCommonModel getRoutes();
+
+    /**
+     * 
      * @param city1
      * @param city2
      * @param dateDepart

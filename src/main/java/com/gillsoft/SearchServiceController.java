@@ -10,6 +10,8 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.lang.time.DateUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +54,8 @@ import com.gillsoft.util.StringUtil;
 
 @RestController
 public class SearchServiceController extends SimpleAbstractTripSearchService<TripPackage> {
+
+	private static Logger LOGGER = LogManager.getLogger(SearchServiceController.class);
 	
 	@Autowired
 	private RestClient client;
@@ -87,6 +91,7 @@ public class SearchServiceController extends SimpleAbstractTripSearchService<Tri
 			case TEEN:
 			case SENIOR:
 				tariff.setValue(idModel.getEtar());
+				break;
 			default:
 				tariff.setValue(idModel.getPtar());
 			}
@@ -97,7 +102,7 @@ public class SearchServiceController extends SimpleAbstractTripSearchService<Tri
 
 	@Override
 	public List<RequiredField> getRequiredFieldsResponse(String arg0) {
-		return Arrays.asList(new RequiredField[] { });
+		return Arrays.asList(RequiredField.NAME, RequiredField.SURNAME, RequiredField.PHONE, RequiredField.EMAIL);
 	}
 
 	@Override
@@ -125,7 +130,7 @@ public class SearchServiceController extends SimpleAbstractTripSearchService<Tri
 		return simpleInitSearchResponse(cache, request);
 	}
 	
-	/*@Override
+	@Override
 	public void addInitSearchCallables(List<Callable<TripPackage>> callables, String[] pair, Date date) {
 		callables.add(() -> {
 			try {
@@ -145,9 +150,9 @@ public class SearchServiceController extends SimpleAbstractTripSearchService<Tri
 				return null;
 			}
 		});
-	}*/
+	}
 	
-	@Override
+	/*@Override
 	public void addInitSearchCallables(List<Callable<TripPackage>> callables, TripSearchRequest request) {
 		callables.add(() -> {
 			try {
@@ -161,14 +166,16 @@ public class SearchServiceController extends SimpleAbstractTripSearchService<Tri
 				tripPackage.setRequest(request);
 				return tripPackage;
 			} catch (ResponseError e) {
+				LOGGER.error(e);
 				TripPackage tripPackage = new TripPackage(request, e);
 				//tripPackage.setRequest(TripSearchRequest.createRequest(request.getLocalityPairs().get(0), request.getDates().get(0)));
 				return tripPackage;
 			} catch (Exception e) {
+				LOGGER.error(e);
 				return null;
 			}
 		});
-	}
+	}*/
 	
 	private static void validateSearchParams(String[] pair, Date date) throws ResponseError {
 		if (date == null
@@ -217,6 +224,12 @@ public class SearchServiceController extends SimpleAbstractTripSearchService<Tri
 				try {
 					departureDate = RestClient.dateFormatFull.parse(pathL.getTimeOut());
 				} catch (Exception e) {}
+				if ((departure == null || arrival == null) && pathL.getAllStops() != null
+						&& pathL.getAllStops().getStopping() != null && !pathL.getAllStops().getStopping().isEmpty()) {
+					departure = getStation(pathL.getAllStops().getStopping().get(0).getCityEng(), localities);
+					arrival = getStation(pathL.getAllStops().getStopping()
+							.get(pathL.getAllStops().getStopping().size() - 1).getCityEng(), localities);
+				}
 				Trip tmpTrip = new Trip();
 				ExternalPrice price = getPrice(pathL.getPrices(), tripPackage.getRequest().getCurrency());
 				tmpTrip.setId(new TripIdModel(pathL.getPathId(), Integer.valueOf(departure.getId()), Integer.valueOf(arrival.getId()), departureDate, price).asString());
@@ -231,12 +244,13 @@ public class SearchServiceController extends SimpleAbstractTripSearchService<Tri
 						segment.setDepartureDate(departureDate);
 						segment.setArrivalDate(RestClient.dateFormatFull.parse(pathL.getTimeIn()));
 					} catch (Exception e) { }
+					segment.setFreeSeatsCount(1);
 					segments.put(segmentId, segment);
 				}
 				if (departure != null) {
 					segment.setDeparture(departure);
 					segment.setArrival(arrival);
-					segment.setRoute(createRoute(segment, tripPackage.getStopPath().getStopPath(), localities));
+					segment.setRoute(createRoute(tripPackage, pathL, localities));
 					segment.setCarrier(getCarrier(pathL.getCarrier(), organisations));
 				}
 				addPrice(segment, price);
@@ -249,31 +263,52 @@ public class SearchServiceController extends SimpleAbstractTripSearchService<Tri
 		containers.add(container);
 	}
 
-	private Route createRoute(Segment segment, List<StopPath> stopList, Map<String, Locality> localities) {
-		Route route = null;
-		Date departureDate = null;
-		try {
-			departureDate = RestClient.dateFormatFull.parse(stopList.get(0).getData() + ' ' + stopList.get(0).getTimeOut());
-		} catch (Exception e) {}
-		for (StopPath stopPath : stopList) {
-			RoutePoint routePoint = new RoutePoint();
+	private Route createRoute(TripPackage tripPackage, PathL pathL, Map<String, Locality> localities) {
+		Route route = new Route();
+		route.setPath(new ArrayList<>());
+		if (tripPackage.getStopPath() != null && tripPackage.getStopPath().getStopPath() != null && !tripPackage.getStopPath().getStopPath().isEmpty()) {
+			Date departureDate = null;
 			try {
-				routePoint.setArrivalDay(Days
-						.daysBetween(new LocalDate(departureDate.getTime()),
-								new LocalDate(RestClient.dateFormatFull
-										.parse(stopPath.getData() + ' ' + stopPath.getTimeIn()).getTime()))
-						.getDays());
+				departureDate = RestClient.dateFormatFull.parse(tripPackage.getStopPath().getStopPath().get(0).getData()
+						+ ' ' + tripPackage.getStopPath().getStopPath().get(0).getTimeOut());
+				for (StopPath stopPath : tripPackage.getStopPath().getStopPath()) {
+					RoutePoint routePoint = new RoutePoint();
+					try {
+						routePoint.setArrivalDay(Days
+								.daysBetween(new LocalDate(departureDate.getTime()),
+										new LocalDate(RestClient.dateFormatFull
+												.parse(stopPath.getData() + ' ' + stopPath.getTimeIn()).getTime()))
+								.getDays());
+					} catch (Exception e) {}
+					routePoint.setLocality(getStation(stopPath.getCity(), localities));
+					localities.get(routePoint.getLocality().getId()).setAddress(Lang.RU, stopPath.getNameStop());
+					routePoint.setDepartureTime(stopPath.getData() + ' ' + stopPath.getTimeOut());
+					route.getPath().add(routePoint);
+				}
 			} catch (Exception e) {}
-			routePoint.setLocality(getStation(stopPath.getCity(), localities));
-			localities.get(routePoint.getLocality().getId()).setAddress(Lang.RU, stopPath.getNameStop());
-			routePoint.setDepartureTime(stopPath.getData() + ' ' + stopPath.getTimeOut());
-			if (route == null) {
-				route = new Route();
-				route.setPath(new ArrayList<>());
+		} else if (pathL.getAllStops() != null && pathL.getAllStops().getStopping() != null && !pathL.getAllStops().getStopping().isEmpty()) {
+			try {
+				final Date departureDate = RestClient.dateFormatFull.parse(pathL.getTimeOut());
+				pathL.getAllStops().getStopping().forEach(stopping -> {
+					RoutePoint routePoint = new RoutePoint();
+					try {
+						routePoint.setArrivalDay(Days.daysBetween(new LocalDate(departureDate.getTime()),
+								new LocalDate(RestClient.dateFormatFull
+										.parse(stopping.getDateArrive() + ' ' + stopping.getTimeArrive()).getTime()))
+								.getDays());
+					} catch (Exception e) {
+					}
+					routePoint.setArrivalTime(stopping.getTimeArrive());
+					routePoint.setLocality(getStation(stopping.getCityEng(), localities));
+					routePoint.getLocality().setAddress(Lang.RU, stopping.getNameRus());
+					routePoint.getLocality().setAddress(Lang.EN, stopping.getNameEng());
+					route.getPath().add(routePoint);
+				});
+			} catch (Exception e) {
+				LOGGER.error(e);
 			}
-			route.getPath().add(routePoint);
 		}
-		return route;
+		return route.getPath().isEmpty() ? null : route;
 	}
 	
 	private ExternalPrice getPrice(ArrayOfExternalPrice prices, Currency currency) {

@@ -43,6 +43,9 @@ public class ResourceServiceController extends AbstractResourceService {
 		// order
 		addMethod(methods, "Create new order", Method.ORDER, MethodType.POST);
 		addMethod(methods, "Confirm order", Method.ORDER_CONFIRM, MethodType.POST);
+		addMethod(methods, "Cancel order", Method.ORDER_CANCEL, MethodType.POST);
+		addMethod(methods, "Order/ticket return", Method.ORDER_RETURN_CONFIRM, MethodType.POST);
+		addMethod(methods, "Order/ticket print form", Method.ORDER_DOCUMENTS, MethodType.POST);
 		return methods;
 	}
 

@@ -2,9 +2,11 @@ package com.gillsoft;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,16 +20,19 @@ import com.gillsoft.client.TariffType;
 import com.gillsoft.client.TripIdModel;
 import com.gillsoft.model.Currency;
 import com.gillsoft.model.Customer;
+import com.gillsoft.model.Document;
+import com.gillsoft.model.DocumentType;
 import com.gillsoft.model.Price;
 import com.gillsoft.model.RestError;
 import com.gillsoft.model.Segment;
 import com.gillsoft.model.ServiceItem;
+import com.gillsoft.model.Tariff;
 import com.gillsoft.model.request.OrderRequest;
 import com.gillsoft.model.response.OrderResponse;
 
 @RestController
 public class OrderServiceController extends AbstractOrderService {
-	
+
 	@Autowired
 	private RestClient client;
 
@@ -45,13 +50,19 @@ public class OrderServiceController extends AbstractOrderService {
 	public OrderResponse cancelResponse(String orderId) {
 		// формируем ответ
 		OrderResponse response = new OrderResponse();
-		List<ServiceItem> resultItems = new ArrayList<>();
+		response.setServices(new ArrayList<>());
+		response.setCustomers(new HashMap<>());
 		// преобразовываем ид заказа в объект
 		OrderIdModel orderIdModel = new OrderIdModel().create(orderId);
 		client.cancelationTicket(orderIdModel);
-		addServiceItems(resultItems, orderIdModel);
-		response.setOrderId(orderIdModel.asString());
-		response.setServices(resultItems);
+		addServiceItems(response.getServices(), orderIdModel);
+		response.setOrderId(orderId);
+		response.getServices().forEach(service -> {
+			if (!response.getCustomers().containsKey(service.getCustomer().getId())) {
+				response.getCustomers().put(service.getCustomer().getId(), service.getCustomer());
+			}
+			service.setCustomer(new Customer(service.getCustomer().getId()));
+		});
 		return response;
 	}
 
@@ -99,7 +110,28 @@ public class OrderServiceController extends AbstractOrderService {
 
 	@Override
 	public OrderResponse getPdfDocumentsResponse(OrderRequest request) {
-		throw RestClient.createUnavailableMethod();
+		OrderResponse response = new OrderResponse();
+		response.setOrderId(request.getOrderId());
+		response.setServices(request.getServices());
+		OrderIdModel orderIdModel = new OrderIdModel().create(request.getOrderId());
+		request.getServices().forEach(service -> {
+			Optional<OrderIdModelObject> optional = orderIdModel.getServices().get(service.getSegment().getId()).stream()
+					.filter(serviceModel -> serviceModel.getCustomer().getId().equals(service.getCustomer().getId()))
+					.findFirst();
+			if (optional.isPresent()) {
+				try {
+					Document document = new Document();
+					document.setType(DocumentType.TICKET);
+					document.setBase64(client.getTicketPdf(optional.get().getTicketNumber()));
+					service.setDocuments(Arrays.asList(document));
+				} catch (Exception e) {
+					service.setError(new RestError(e.getMessage()));
+				}
+			} else {
+				service.setError(new RestError("Service with such customer not found"));
+			}
+		});
+		return response;
 	}
 
 	@Override
@@ -143,7 +175,7 @@ public class OrderServiceController extends AbstractOrderService {
 					serviceItem.setError(serviceItem.getConfirmed() ? null : new RestError(service.getCancellationTicketError()));
 					if (service.getReturnPrice() != null) {
 						serviceItem.setPrice(new Price());
-						serviceItem.getPrice().setAmount(new BigDecimal(service.getReturnPrice()));
+						serviceItem.getPrice().setAmount(BigDecimal.valueOf(service.getReturnPrice()));
 						serviceItem.getPrice().setCurrency(Currency.valueOf(tripModel.getCurrencyName()));
 					}
 				}
@@ -159,7 +191,33 @@ public class OrderServiceController extends AbstractOrderService {
 
 	@Override
 	public OrderResponse returnServicesResponse(OrderRequest request) {
-		throw RestClient.createUnavailableMethod();
+		OrderResponse response = new OrderResponse();
+		response.setOrderId(request.getOrderId());
+		response.setServices(request.getServices());
+		OrderIdModel orderIdModel = new OrderIdModel().create(request.getOrderId());
+		request.getServices().forEach(service -> {
+			Optional<OrderIdModelObject> optional = orderIdModel.getServices().get(service.getSegment().getId()).stream()
+					.filter(serviceModel -> serviceModel.getCustomer().getId().equals(service.getCustomer().getId()))
+					.findFirst();
+			if (optional.isPresent()) {
+				try {
+					BigDecimal returnAmount = client.returnTicket(optional.get().getTicketNumber());
+					service.setConfirmed(true);
+					service.setPrice(new Price());
+					service.getPrice().setAmount(returnAmount);
+					service.getPrice().setCurrency(service.getPrice() != null ? service.getPrice().getCurrency() : null);
+					service.getPrice().setTariff(new Tariff());
+					service.getPrice().getTariff().setValue(returnAmount);
+				} catch (Exception e) {
+					service.setConfirmed(false);
+					service.setError(new RestError(e.getMessage()));
+				}
+			} else {
+				service.setConfirmed(false);
+				service.setError(new RestError("Service with such customer not found"));
+			}
+		});
+		return response;
 	}
 
 	@Override

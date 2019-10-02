@@ -37,14 +37,6 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link CreateTicket }
-     * 
-     */
-    public CreateTicket createCreateTicket() {
-        return new CreateTicket();
-    }
-
-    /**
      * Create an instance of {@link FindPath }
      * 
      */
@@ -74,6 +66,134 @@ public class ObjectFactory {
      */
     public CreateTicketResponse createCreateTicketResponse() {
         return new CreateTicketResponse();
+    }
+
+    /**
+     * Create an instance of {@link GetRoutes }
+     * 
+     */
+    public GetRoutes createGetRoutes() {
+        return new GetRoutes();
+    }
+
+    /**
+     * Create an instance of {@link BookingTicket }
+     * 
+     */
+    public BookingTicket createBookingTicket() {
+        return new BookingTicket();
+    }
+
+    /**
+     * Create an instance of {@link GetRoutesResponse }
+     * 
+     */
+    public GetRoutesResponse createGetRoutesResponse() {
+        return new GetRoutesResponse();
+    }
+
+    /**
+     * Create an instance of {@link RouteCommonModel }
+     * 
+     */
+    public RouteCommonModel createRouteCommonModel() {
+        return new RouteCommonModel();
+    }
+
+    /**
+     * Create an instance of {@link GetCurrencyResponse }
+     * 
+     */
+    public GetCurrencyResponse createGetCurrencyResponse() {
+        return new GetCurrencyResponse();
+    }
+
+    /**
+     * Create an instance of {@link ArrayOfValyta }
+     * 
+     */
+    public ArrayOfValyta createArrayOfValyta() {
+        return new ArrayOfValyta();
+    }
+
+    /**
+     * Create an instance of {@link PrintPdfResponse }
+     * 
+     */
+    public PrintPdfResponse createPrintPdfResponse() {
+        return new PrintPdfResponse();
+    }
+
+    /**
+     * Create an instance of {@link FindPathResponse }
+     * 
+     */
+    public FindPathResponse createFindPathResponse() {
+        return new FindPathResponse();
+    }
+
+    /**
+     * Create an instance of {@link ArrayOfPathL }
+     * 
+     */
+    public ArrayOfPathL createArrayOfPathL() {
+        return new ArrayOfPathL();
+    }
+
+    /**
+     * Create an instance of {@link GetTarifResponse }
+     * 
+     */
+    public GetTarifResponse createGetTarifResponse() {
+        return new GetTarifResponse();
+    }
+
+    /**
+     * Create an instance of {@link ArrayOfTarif }
+     * 
+     */
+    public ArrayOfTarif createArrayOfTarif() {
+        return new ArrayOfTarif();
+    }
+
+    /**
+     * Create an instance of {@link GetTicket }
+     * 
+     */
+    public GetTicket createGetTicket() {
+        return new GetTicket();
+    }
+
+    /**
+     * Create an instance of {@link GetCityResponse }
+     * 
+     */
+    public GetCityResponse createGetCityResponse() {
+        return new GetCityResponse();
+    }
+
+    /**
+     * Create an instance of {@link ArrayOfCityS }
+     * 
+     */
+    public ArrayOfCityS createArrayOfCityS() {
+        return new ArrayOfCityS();
+    }
+
+    /**
+     * Create an instance of {@link AnaluteTicketResponse }
+     * 
+     */
+    public AnaluteTicketResponse createAnaluteTicketResponse() {
+        return new AnaluteTicketResponse();
+    }
+
+    /**
+     * Create an instance of {@link CreateTicket }
+     * 
+     */
+    public CreateTicket createCreateTicket() {
+        return new CreateTicket();
     }
 
     /**
@@ -125,43 +245,11 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link BookingTicket }
-     * 
-     */
-    public BookingTicket createBookingTicket() {
-        return new BookingTicket();
-    }
-
-    /**
      * Create an instance of {@link GetStopPath }
      * 
      */
     public GetStopPath createGetStopPath() {
         return new GetStopPath();
-    }
-
-    /**
-     * Create an instance of {@link GetCurrencyResponse }
-     * 
-     */
-    public GetCurrencyResponse createGetCurrencyResponse() {
-        return new GetCurrencyResponse();
-    }
-
-    /**
-     * Create an instance of {@link ArrayOfValyta }
-     * 
-     */
-    public ArrayOfValyta createArrayOfValyta() {
-        return new ArrayOfValyta();
-    }
-
-    /**
-     * Create an instance of {@link PrintPdfResponse }
-     * 
-     */
-    public PrintPdfResponse createPrintPdfResponse() {
-        return new PrintPdfResponse();
     }
 
     /**
@@ -189,35 +277,19 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link FindPathResponse }
+     * Create an instance of {@link GetTicketResponse }
      * 
      */
-    public FindPathResponse createFindPathResponse() {
-        return new FindPathResponse();
+    public GetTicketResponse createGetTicketResponse() {
+        return new GetTicketResponse();
     }
 
     /**
-     * Create an instance of {@link ArrayOfPathL }
+     * Create an instance of {@link TicketCommonModel }
      * 
      */
-    public ArrayOfPathL createArrayOfPathL() {
-        return new ArrayOfPathL();
-    }
-
-    /**
-     * Create an instance of {@link GetTarifResponse }
-     * 
-     */
-    public GetTarifResponse createGetTarifResponse() {
-        return new GetTarifResponse();
-    }
-
-    /**
-     * Create an instance of {@link ArrayOfTarif }
-     * 
-     */
-    public ArrayOfTarif createArrayOfTarif() {
-        return new ArrayOfTarif();
+    public TicketCommonModel createTicketCommonModel() {
+        return new TicketCommonModel();
     }
 
     /**
@@ -234,22 +306,6 @@ public class ObjectFactory {
      */
     public ArrayOfStopPath createArrayOfStopPath() {
         return new ArrayOfStopPath();
-    }
-
-    /**
-     * Create an instance of {@link GetCityResponse }
-     * 
-     */
-    public GetCityResponse createGetCityResponse() {
-        return new GetCityResponse();
-    }
-
-    /**
-     * Create an instance of {@link ArrayOfCityS }
-     * 
-     */
-    public ArrayOfCityS createArrayOfCityS() {
-        return new ArrayOfCityS();
     }
 
     /**
@@ -285,11 +341,19 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link AnaluteTicketResponse }
+     * Create an instance of {@link ArrayOfStopping }
      * 
      */
-    public AnaluteTicketResponse createAnaluteTicketResponse() {
-        return new AnaluteTicketResponse();
+    public ArrayOfStopping createArrayOfStopping() {
+        return new ArrayOfStopping();
+    }
+
+    /**
+     * Create an instance of {@link StoppingModel }
+     * 
+     */
+    public StoppingModel createStoppingModel() {
+        return new StoppingModel();
     }
 
     /**
@@ -301,11 +365,11 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link StopPath }
+     * Create an instance of {@link Stopping }
      * 
      */
-    public StopPath createStopPath() {
-        return new StopPath();
+    public Stopping createStopping() {
+        return new Stopping();
     }
 
     /**
@@ -333,19 +397,19 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link Tarif }
+     * Create an instance of {@link ArrayOfRouteDataModel }
      * 
      */
-    public Tarif createTarif() {
-        return new Tarif();
+    public ArrayOfRouteDataModel createArrayOfRouteDataModel() {
+        return new ArrayOfRouteDataModel();
     }
 
     /**
-     * Create an instance of {@link PathL }
+     * Create an instance of {@link TicketStatusModel }
      * 
      */
-    public PathL createPathL() {
-        return new PathL();
+    public TicketStatusModel createTicketStatusModel() {
+        return new TicketStatusModel();
     }
 
     /**
@@ -354,6 +418,62 @@ public class ObjectFactory {
      */
     public CityAndCountry createCityAndCountry() {
         return new CityAndCountry();
+    }
+
+    /**
+     * Create an instance of {@link RouteDataModel }
+     * 
+     */
+    public RouteDataModel createRouteDataModel() {
+        return new RouteDataModel();
+    }
+
+    /**
+     * Create an instance of {@link ArrayOfBusStopModel }
+     * 
+     */
+    public ArrayOfBusStopModel createArrayOfBusStopModel() {
+        return new ArrayOfBusStopModel();
+    }
+
+    /**
+     * Create an instance of {@link StopPath }
+     * 
+     */
+    public StopPath createStopPath() {
+        return new StopPath();
+    }
+
+    /**
+     * Create an instance of {@link BusStopModel }
+     * 
+     */
+    public BusStopModel createBusStopModel() {
+        return new BusStopModel();
+    }
+
+    /**
+     * Create an instance of {@link Tarif }
+     * 
+     */
+    public Tarif createTarif() {
+        return new Tarif();
+    }
+
+    /**
+     * Create an instance of {@link ClientModel }
+     * 
+     */
+    public ClientModel createClientModel() {
+        return new ClientModel();
+    }
+
+    /**
+     * Create an instance of {@link PathL }
+     * 
+     */
+    public PathL createPathL() {
+        return new PathL();
     }
 
 }
