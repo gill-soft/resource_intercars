@@ -2,12 +2,17 @@ package com.gillsoft.model;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
+
 import javax.xml.namespace.QName;
+import javax.xml.ws.Binding;
+import javax.xml.ws.BindingProvider;
 import javax.xml.ws.Service;
 import javax.xml.ws.WebEndpoint;
 import javax.xml.ws.WebServiceClient;
 import javax.xml.ws.WebServiceException;
 import javax.xml.ws.WebServiceFeature;
+import javax.xml.ws.handler.Handler;
 
 
 /**
@@ -66,9 +71,15 @@ public class WebServiceExternal
      * @return
      *     returns WebServiceExternalSoap
      */
-    @WebEndpoint(name = "WebServiceExternalSoap")
+    @SuppressWarnings("rawtypes")
+	@WebEndpoint(name = "WebServiceExternalSoap")
     public WebServiceExternalSoap getWebServiceExternalSoap() {
-        return super.getPort(new QName("http://tempuri.org/", "WebServiceExternalSoap"), WebServiceExternalSoap.class);
+    	WebServiceExternalSoap w = super.getPort(new QName("http://tempuri.org/", "WebServiceExternalSoap"), WebServiceExternalSoap.class);
+    	Binding binding = ((BindingProvider) w).getBinding();
+		List<Handler> handlerList = binding.getHandlerChain();
+        handlerList.add(new LogHandler());
+        binding.setHandlerChain(handlerList);
+        return w;
     }
 
     /**
