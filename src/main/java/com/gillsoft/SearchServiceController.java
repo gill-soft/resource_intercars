@@ -244,7 +244,7 @@ public class SearchServiceController extends SimpleAbstractTripSearchService<Tri
 						segment.setDepartureDate(departureDate);
 						segment.setArrivalDate(RestClient.dateFormatFull.parse(pathL.getTimeIn()));
 					} catch (Exception e) { }
-					segment.setFreeSeatsCount(1);
+					segment.setFreeSeatsCount(Integer.valueOf(pathL.getCountFreeTickets()));
 					segments.put(segmentId, segment);
 				}
 				if (departure != null) {

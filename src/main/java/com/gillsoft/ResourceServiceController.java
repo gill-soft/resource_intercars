@@ -39,6 +39,7 @@ public class ResourceServiceController extends AbstractResourceService {
 		// search
 		addMethod(methods, "Init search", Method.SEARCH, MethodType.POST);
 		addMethod(methods, "Return search result", Method.SEARCH, MethodType.GET);
+		addMethod(methods, "Return required fields to create order", Method.SEARCH_TRIP_REQUIRED, MethodType.GET);
 
 		// order
 		addMethod(methods, "Create new order", Method.ORDER, MethodType.POST);

@@ -52,7 +52,7 @@ public class GetTripsTask implements Runnable, Serializable {
 		try {
 			client.getCache().write(tripPackage, params);
 		} catch (IOCacheException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			/*LOGGER.info("params" + params.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue()).collect(Collectors.joining(", ", "{", "}")));
 			LOGGER.error(e);*/
 		}
