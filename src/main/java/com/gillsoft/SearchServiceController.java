@@ -333,6 +333,7 @@ public class SearchServiceController extends SimpleAbstractTripSearchService<Tri
 	private void addPrice(Segment segment, ExternalPrice price) {
 		Price tripPrice = new Price();
 		Tariff tariff = new Tariff();
+		tariff.setId(String.valueOf(TariffType.ADULT.getId()));
 		tariff.setValue(price.getPtar());
 		tariff.setName(TariffType.ADULT.getName());
 		tripPrice.setCurrency(Currency.valueOf(price.getCurrencyName()));

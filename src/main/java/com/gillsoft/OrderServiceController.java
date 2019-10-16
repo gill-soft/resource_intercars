@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,6 +34,8 @@ import com.gillsoft.model.response.OrderResponse;
 
 @RestController
 public class OrderServiceController extends AbstractOrderService {
+
+	private static Logger LOGGER = LogManager.getLogger(OrderServiceController.class);
 
 	@Autowired
 	private RestClient client;
@@ -61,6 +65,12 @@ public class OrderServiceController extends AbstractOrderService {
 			if (!response.getCustomers().containsKey(service.getCustomer().getId())) {
 				response.getCustomers().put(service.getCustomer().getId(), service.getCustomer());
 			}
+			Optional<OrderIdModelObject> optional = orderIdModel.getServices().get(service.getSegment().getId()).stream()
+					.filter(serviceModel -> serviceModel.getCustomer().getId().equals(service.getCustomer().getId()))
+					.findFirst();
+			if (optional.isPresent()) {
+				service.setId(optional.get().getTicketNumber());
+			}
 			service.setCustomer(new Customer(service.getCustomer().getId()));
 		});
 		return response;
@@ -87,10 +97,10 @@ public class OrderServiceController extends AbstractOrderService {
 			if (customer != null) {
 				customer.setId(service.getCustomer().getId());
 				OrderIdModelObject orderIdModelObject = new OrderIdModelObject(customer);
-				if (service.getPrice() != null && service.getPrice().getTariff() != null && service.getPrice().getTariff().getId() != null) {
-					orderIdModelObject.setTariffId(Integer.parseInt(service.getPrice().getTariff().getId()));
-				} else {
+				if (service.getPrice() == null || service.getPrice().getTariff() == null || service.getPrice().getTariff().getId() == null) {
 					orderIdModelObject.setTariffId(TariffType.ADULT.getId());
+				} else {
+					orderIdModelObject.setTariffId(Integer.parseInt(service.getPrice().getTariff().getId()));
 				}
 				TripIdModel tripIdModel = new TripIdModel().create(service.getSegment().getId());
 				orderIdModelObject.setCurrencyId(tripIdModel.getCurrency());
@@ -98,10 +108,21 @@ public class OrderServiceController extends AbstractOrderService {
 			}
 		}
 		response.setServices(request.getServices());
+		response.getServices().forEach(s -> s.setPrice(null));
 		try {
 			client.bookingTicket(serviceMap, orderId);
+			request.getServices().forEach(service -> {
+				Optional<OrderIdModelObject> optional = orderId.getServices().get(service.getSegment().getId()).stream()
+						.filter(serviceModel -> serviceModel.getCustomer().getId().equals(service.getCustomer().getId()))
+						.findFirst();
+				if (optional.isPresent()) {
+					service.setId(optional.get().getTicketNumber());
+				} else {
+					service.setConfirmed(false);
+				}
+			});
 		} catch (ResponseError e) {
-			e.printStackTrace();
+			LOGGER.error(e);
 			response.getServices().stream().forEach(c -> c.setConfirmed(false));
 		}
 		response.setOrderId(orderId.asString());
@@ -164,6 +185,7 @@ public class OrderServiceController extends AbstractOrderService {
 			TripIdModel tripModel = new TripIdModel().create(key);
 			for (OrderIdModelObject service : orderIdModel.getServices().get(key)) {
 				ServiceItem serviceItem = new ServiceItem();
+				serviceItem.setId(service.getTicketNumber());
 				serviceItem.setCustomer(service.getCustomer());
 				serviceItem.setSegment(new Segment(key));
 				if (service.getCreateTicketResult() != null) {
@@ -202,6 +224,7 @@ public class OrderServiceController extends AbstractOrderService {
 			if (optional.isPresent()) {
 				try {
 					BigDecimal returnAmount = client.returnTicket(optional.get().getTicketNumber());
+					service.setId(optional.get().getTicketNumber());
 					service.setConfirmed(true);
 					service.setPrice(new Price());
 					service.getPrice().setAmount(returnAmount);
