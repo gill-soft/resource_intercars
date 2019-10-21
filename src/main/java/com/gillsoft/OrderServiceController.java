@@ -133,25 +133,52 @@ public class OrderServiceController extends AbstractOrderService {
 	public OrderResponse getPdfDocumentsResponse(OrderRequest request) {
 		OrderResponse response = new OrderResponse();
 		response.setOrderId(request.getOrderId());
-		response.setServices(request.getServices());
 		OrderIdModel orderIdModel = new OrderIdModel().create(request.getOrderId());
-		request.getServices().forEach(service -> {
-			Optional<OrderIdModelObject> optional = orderIdModel.getServices().get(service.getSegment().getId()).stream()
-					.filter(serviceModel -> serviceModel.getCustomer().getId().equals(service.getCustomer().getId()))
-					.findFirst();
-			if (optional.isPresent()) {
-				try {
-					Document document = new Document();
-					document.setType(DocumentType.TICKET);
-					document.setBase64(client.getTicketPdf(optional.get().getTicketNumber()));
-					service.setDocuments(Arrays.asList(document));
-				} catch (Exception e) {
-					service.setError(new RestError(e.getMessage()));
+		if (request.getServices() != null) {
+			response.setServices(request.getServices());
+			request.getServices().forEach(service -> {
+				if (service.getId() == null && service.getSegment() != null && service.getSegment().getId() != null
+						&& service.getCustomer() != null && service.getCustomer().getId() != null) {
+					Optional<OrderIdModelObject> optional = orderIdModel.getServices().get(service.getSegment().getId())
+							.stream().filter(serviceModel -> serviceModel.getCustomer().getId()
+									.equals(service.getCustomer().getId()))
+							.findFirst();
+					if (optional.isPresent()) {
+						service.setId(optional.get().getTicketNumber());
+					}
 				}
-			} else {
-				service.setError(new RestError("Service with such customer not found"));
-			}
-		});
+				if (service.getId() != null) {
+					try {
+						Document document = new Document();
+						document.setType(DocumentType.TICKET);
+						document.setBase64(client.getTicketPdf(service.getId()));
+						service.setDocuments(Arrays.asList(document));
+					} catch (Exception e) {
+						service.setError(new RestError(e.getMessage()));
+					}
+				} else {
+					service.setError(new RestError("Service with such customer not found"));
+				}
+			});
+		} else {
+			response.setServices(new ArrayList<>());
+			orderIdModel.getServices().values().forEach(list -> 
+				list.forEach(ticket -> {
+					ServiceItem service = new ServiceItem();
+					response.getServices().add(service);
+					service.setId(ticket.getTicketNumber());
+					try {
+						Document document = new Document();
+						document.setType(DocumentType.TICKET);
+						document.setBase64(client.getTicketPdf(ticket.getTicketNumber()));
+						service.setDocuments(Arrays.asList(document));
+					} catch (Exception e) {
+						service.setConfirmed(false);
+						service.setError(new RestError(e.getMessage()));
+					}
+				})
+			);
+		}
 		return response;
 	}
 
