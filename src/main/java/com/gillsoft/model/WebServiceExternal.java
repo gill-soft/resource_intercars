@@ -23,7 +23,7 @@ import com.gillsoft.client.Config;
  * Generated source version: 2.2
  * 
  */
-@WebServiceClient(name = "WebServiceExternal", targetNamespace = "http://tempuri.org/", wsdlLocation = "http://api.intercars-tickets.com/webservices/WebServiceExternal.asmx?WSDL")
+@WebServiceClient(name = "WebServiceExternal", targetNamespace = "http://tempuri.org/")
 public class WebServiceExternal
     extends Service
 {
@@ -77,6 +77,7 @@ public class WebServiceExternal
 	@WebEndpoint(name = "WebServiceExternalSoap")
     public WebServiceExternalSoap getWebServiceExternalSoap() {
     	WebServiceExternalSoap w = super.getPort(new QName("http://tempuri.org/", "WebServiceExternalSoap"), WebServiceExternalSoap.class);
+    	((BindingProvider) w).getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, Config.getUrl());
     	Binding binding = ((BindingProvider) w).getBinding();
 		List<Handler> handlerList = binding.getHandlerChain();
         handlerList.add(new LogHandler());
