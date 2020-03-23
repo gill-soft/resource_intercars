@@ -1,7 +1,5 @@
 package com.gillsoft;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -63,11 +61,10 @@ public class LocalityServiceController extends AbstractLocalityService {
 					boolean cacheError = true;
 					do {
 						try {
+							binding = client.getCachedBinding();
 							ArrayOfCityS cities = client.getCachedStations();
 							if (cities != null) {
-								all = new ArrayList<>();
-								binding = new HashMap<>();
-								all.addAll(cities.getCityS().stream().map(this::getLocalityFromStation).collect(Collectors.toList()));
+								all = cities.getCityS().stream().map(this::getLocalityFromStation).collect(Collectors.toList());
 								cacheError = false;
 							}
 						} catch (IOCacheException e) {

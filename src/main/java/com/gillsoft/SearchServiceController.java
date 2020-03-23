@@ -152,31 +152,6 @@ public class SearchServiceController extends SimpleAbstractTripSearchService<Tri
 		});
 	}
 	
-	/*@Override
-	public void addInitSearchCallables(List<Callable<TripPackage>> callables, TripSearchRequest request) {
-		callables.add(() -> {
-			try {
-				validateSearchParams(request.getLocalityPairs().get(0), request.getDates().get(0));
-				TripPackage tripPackage = client.getCachedTrips(request.getLocalityPairs().get(0)[0],
-						request.getLocalityPairs().get(0)[1], request.getDates().get(0));
-				if (tripPackage == null) {
-					throw new ResponseError("Empty result");
-				}
-				//tripPackage.setRequest(TripSearchRequest.createRequest(request.getLocalityPairs().get(0), request.getDates().get(0)));
-				tripPackage.setRequest(request);
-				return tripPackage;
-			} catch (ResponseError e) {
-				LOGGER.error(e);
-				TripPackage tripPackage = new TripPackage(request, e);
-				//tripPackage.setRequest(TripSearchRequest.createRequest(request.getLocalityPairs().get(0), request.getDates().get(0)));
-				return tripPackage;
-			} catch (Exception e) {
-				LOGGER.error(e);
-				return null;
-			}
-		});
-	}*/
-	
 	private static void validateSearchParams(String[] pair, Date date) throws ResponseError {
 		if (date == null
 				|| date.getTime() < DateUtils.truncate(new Date(), Calendar.DATE).getTime()) {

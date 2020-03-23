@@ -4,9 +4,13 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,6 +76,67 @@ public class RestClient {
 			LOGGER.error(e);
 			throw new ResponseError(e.getMessage(), e);
 		}
+	}
+
+	public Map<String, List<String>> getCachedBinding() throws IOCacheException {
+		return BindingUpdateTask.getBinding(cache);
+	}
+
+	public Map<String, List<String>> getBinding() throws ResponseError {
+		Map<String, Set<String>> map = new HashMap<>();
+		try {
+			RestClient.webService.getWebServiceExternalSoap().getRoutes().getData().getRouteDataModel()
+					.forEach(dataModel -> {
+						List<String> sit = dataModel.getBusStops().getBusStopModel().stream()
+								.map(m -> m.getTypeStop().toLowerCase().contains("sit")
+										? String.valueOf(m.getBusStopId()) : null)
+								.collect(Collectors.toList());
+						List<String> out = dataModel.getBusStops().getBusStopModel().stream()
+								.map(m -> m.getTypeStop().toLowerCase().contains("out")
+										? String.valueOf(m.getBusStopId()) : null)
+								.collect(Collectors.toList());
+						int oSize = out.size();
+						for (int s = 0; s < oSize; s++) {
+							String key = sit.get(s);
+							if (key != null) {
+								Set<String> set = map.get(key);
+								if (set == null) {
+									set = new HashSet<>();
+									map.put(key, set);
+								}
+								set.addAll(out.subList(s + 1, oSize).stream().filter(Objects::nonNull)
+										.collect(Collectors.toList()));
+							}
+						}
+					});
+			//
+			/*final Date[] date = {null};
+			try { date[0] = dateFormat.parse("15.11.2019"); } catch (Exception e) {}
+			map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, v -> new ArrayList<>(v.getValue()))).entrySet().forEach(entry -> {
+				entry.getValue().forEach(to -> {
+					TripsTaskKey key = new TripsTaskKey(entry.getKey(), to, date[0]);
+					try {
+						TripPackage tripPackage = findPath(key);
+						if (tripPackage != null && tripPackage.getPathList() != null && !tripPackage.getPathList().isEmpty()) {
+							tripPackage.getPathList().forEach(pathL -> {
+								StringJoiner sj = new StringJoiner(",");
+								sj.add(pathL.getPath());
+								pathL.getAllStops().getStopping().forEach(stop -> {
+									sj.add(stop.getCityRus());
+									sj.add(stop.getTimeArrive());
+								});
+								System.out.println(sj.toString());
+							});
+						}
+					} catch (Exception e) {
+						
+					}
+				});
+			});*/
+		} catch (Exception e) {
+			throw new ResponseError(e.getMessage(), e);
+		}
+		return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, v -> new ArrayList<>(v.getValue())));
 	}
 
 	/****************** TRIPS ********************/
