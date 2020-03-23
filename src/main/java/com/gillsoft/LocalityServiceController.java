@@ -68,11 +68,6 @@ public class LocalityServiceController extends AbstractLocalityService {
 								all = new ArrayList<>();
 								binding = new HashMap<>();
 								all.addAll(cities.getCityS().stream().map(this::getLocalityFromStation).collect(Collectors.toList()));
-								/*for (CityS city : cities.getCityS()) {
-									Locality locality = getLocalityFromStation(city);
-									all.add(locality);
-									//binding.put(locality.getId(), station.getPairs());
-								}*/
 								cacheError = false;
 							}
 						} catch (IOCacheException e) {
